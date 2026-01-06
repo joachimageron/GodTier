@@ -1,0 +1,13 @@
+{
+    "name": "godtier-monorepo",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+        "build": "pnpm -r --parallel run build",
+        "test": "pnpm -r --parallel run test",
+        "dev": "pnpm -r --parallel run dev"
+    },
+    "devDependencies": {
+        "typescript": "^5.0.0"
+    }
+}
