@@ -1,6 +1,8 @@
 import { Controller, Get } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { TierList, TierRank } from '@godtier/shared';
 
+@ApiTags('tier-lists')
 @Controller('tier-lists')
 export class TierListController {
     @Get()

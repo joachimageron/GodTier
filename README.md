@@ -46,8 +46,8 @@ DATABASE_URL="./dev.db"
 pnpm dev
 
 # Ou lancer individuellement :
-pnpm --filter backend dev
-pnpm --filter frontend dev
+pnpm dev:back
+pnpm dev:front
 ```
 
 - **Backend** : http://localhost:3000
