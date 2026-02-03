@@ -11,11 +11,12 @@ export class CreateTierListUseCase {
     private readonly tierListRepository: TierListRepository,
   ) {}
 
-  async execute(dto: CreateTierListDto): Promise<TierList> {
+  async execute(dto: CreateTierListDto, ownerId: number): Promise<TierList> {
     const tierList = new TierList(
       randomUUID(),
       dto.title,
-      dto.description
+      dto.description,
+      ownerId
     );
 
     await this.tierListRepository.save(tierList);

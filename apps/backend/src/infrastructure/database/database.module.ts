@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { TierListEntity } from './entities/tier-list.entity';
+import { LogoEntity } from './entities/logo.entity';
 import { UserRepository } from './repositories/user.repository';
 
 @Module({
@@ -9,7 +10,7 @@ import { UserRepository } from './repositories/user.repository';
         TypeOrmModule.forRoot({
             type: 'better-sqlite3',
             database: process.env.DATABASE_URL || 'dev.db',
-            entities: [User, TierListEntity],
+            entities: [User, TierListEntity, LogoEntity],
             synchronize: true, // Only for development! Set to false in production
             logging: process.env.NODE_ENV !== 'production',
         }),

@@ -4,9 +4,10 @@ import { DatabaseModule } from './infrastructure/database/database.module';
 import { AuthModule } from './infrastructure/auth/auth.module';
 import { S3Service } from './infrastructure/s3/s3.service';
 import { TierListModule } from './infrastructure/tier-list/tier-list.module';
+import { LogoModule } from './infrastructure/logo/logo.module';
 
 @Module({
-    imports: [DatabaseModule, AuthModule, TierListModule],
+    imports: [DatabaseModule, AuthModule, TierListModule, LogoModule],
     controllers: [HealthController],
     providers: [S3Service],
 })

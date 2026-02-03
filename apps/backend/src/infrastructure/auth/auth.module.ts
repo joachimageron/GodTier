@@ -5,6 +5,7 @@ import { DatabaseModule } from '../database/database.module';
 import { AuthController } from '../controllers/auth.controller';
 import { BcryptService } from './bcrypt.service';
 import { JwtTokenService } from './jwt-token.service';
+import { JwtStrategy } from './jwt.strategy';
 import { SignUpUseCase } from '../../application/use-cases/auth/sign-up.use-case';
 import { SignInUseCase } from '../../application/use-cases/auth/sign-in.use-case';
 import { UserRepository } from '../database/repositories/user.repository';
@@ -22,6 +23,7 @@ import { UserRepository } from '../database/repositories/user.repository';
     providers: [
         SignUpUseCase,
         SignInUseCase,
+        JwtStrategy,
         {
             provide: 'UserRepository',
             useExisting: UserRepository,
@@ -35,5 +37,6 @@ import { UserRepository } from '../database/repositories/user.repository';
             useClass: JwtTokenService,
         },
     ],
+    exports: [PassportModule, JwtStrategy],
 })
 export class AuthModule {}

@@ -1,13 +1,17 @@
-import { Controller, Get, Post, Body, Param, Patch } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, Patch, UseGuards, Request } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 import { CreateTierListDto, AddLogoDto, MoveLogoDto } from '../../application/dtos/tier-list.dto';
 import { CreateTierListUseCase } from '../../application/use-cases/tier-list/create-tier-list.use-case';
 import { GetTierListUseCase } from '../../application/use-cases/tier-list/get-tier-list.use-case';
 import { AddLogoUseCase } from '../../application/use-cases/tier-list/add-logo.use-case';
 import { MoveLogoUseCase } from '../../application/use-cases/tier-list/move-logo.use-case';
+import { GetUserTierListsUseCase } from '../../application/use-cases/tier-list/get-user-tier-lists.use-case';
 import { TierList } from '../../domain/tier-list';
 
 @ApiTags('tier-lists')
+@ApiBearerAuth()
+@UseGuards(AuthGuard('jwt'))
 @Controller('tier-lists')
 export class TierListController {
   constructor(
@@ -15,13 +19,21 @@ export class TierListController {
     private readonly getTierListUseCase: GetTierListUseCase,
     private readonly addLogoUseCase: AddLogoUseCase,
     private readonly moveLogoUseCase: MoveLogoUseCase,
+    private readonly getUserTierListsUseCase: GetUserTierListsUseCase,
   ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new tier list' })
   @ApiResponse({ status: 201, description: 'The tier list has been successfully created.' })
-  async create(@Body() createTierListDto: CreateTierListDto): Promise<TierList> {
-    return this.createTierListUseCase.execute(createTierListDto);
+  async create(@Request() req, @Body() createTierListDto: CreateTierListDto): Promise<TierList> {
+    return this.createTierListUseCase.execute(createTierListDto, req.user.userId);
+  }
+
+  @Get('my-lists')
+  @ApiOperation({ summary: 'Get current user tier lists' })
+  @ApiResponse({ status: 200, description: 'Return the tier lists of the connected user.' })
+  async getMyLists(@Request() req): Promise<TierList[]> {
+    return this.getUserTierListsUseCase.execute(req.user.userId);
   }
 
   @Get(':id')

@@ -7,6 +7,7 @@ import { CreateTierListUseCase } from '../../application/use-cases/tier-list/cre
 import { GetTierListUseCase } from '../../application/use-cases/tier-list/get-tier-list.use-case';
 import { AddLogoUseCase } from '../../application/use-cases/tier-list/add-logo.use-case';
 import { MoveLogoUseCase } from '../../application/use-cases/tier-list/move-logo.use-case';
+import { GetUserTierListsUseCase } from '../../application/use-cases/tier-list/get-user-tier-lists.use-case';
 
 @Module({
   imports: [TypeOrmModule.forFeature([TierListEntity])],
@@ -20,6 +21,7 @@ import { MoveLogoUseCase } from '../../application/use-cases/tier-list/move-logo
     GetTierListUseCase,
     AddLogoUseCase,
     MoveLogoUseCase,
+    GetUserTierListsUseCase,
   ],
   exports: [],
 })

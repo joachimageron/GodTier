@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import { HomePage } from './pages/HomePage';
 import { SignupPage } from './pages/SignupPage';
 import { SigninPage } from './pages/SigninPage';
+import { TierListPage } from './pages/TierListPage';
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/login" element={<SigninPage />} />
+          <Route path="/tier-lists/:id" element={<TierListPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>

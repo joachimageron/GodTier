@@ -24,6 +24,7 @@ export class TierList {
     public readonly id: string,
     public title: string,
     public description: string | undefined,
+    public readonly ownerId: number,
     initialItems: Partial<Record<TierCategory, Logo[]>> = {},
     public readonly createdAt: Date = new Date(),
     public updatedAt: Date = new Date()
@@ -123,5 +124,17 @@ export class TierList {
 
   private touch() {
     this.updatedAt = new Date();
+  }
+
+  toJSON() {
+    return {
+      id: this.id,
+      title: this.title,
+      description: this.description,
+      ownerId: this.ownerId,
+      items: this.items,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+    };
   }
 }

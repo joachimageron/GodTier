@@ -23,6 +23,11 @@ export class TypeOrmTierListRepository implements TierListRepository {
     return this.toDomain(entity);
   }
 
+  async findByOwnerId(ownerId: number): Promise<TierList[]> {
+    const entities = await this.repository.find({ where: { ownerId } });
+    return entities.map(this.toDomain);
+  }
+
   async save(tierList: TierList): Promise<void> {
     const entity = this.toEntity(tierList);
     await this.repository.save(entity);
@@ -33,6 +38,7 @@ export class TypeOrmTierListRepository implements TierListRepository {
       entity.id,
       entity.title,
       entity.description || undefined,
+      entity.ownerId,
       entity.items,
       entity.createdAt,
       entity.updatedAt,
@@ -44,6 +50,7 @@ export class TypeOrmTierListRepository implements TierListRepository {
     entity.id = domain.id;
     entity.title = domain.title;
     entity.description = domain.description || '';
+    entity.ownerId = domain.ownerId;
     entity.items = domain.items as any; // Cast to satisfy simple-json expectation
     entity.createdAt = domain.createdAt;
     entity.updatedAt = domain.updatedAt;

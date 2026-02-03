@@ -12,6 +12,9 @@ export class TierListEntity {
   @Column({ nullable: true })
   description: string;
 
+  @Column()
+  ownerId: number;
+
   @Column('simple-json')
   items: Record<TierCategory, Logo[]>;
 
