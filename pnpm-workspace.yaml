@@ -6,6 +6,8 @@ onlyBuiltDependencies:
   - '@nestjs/core'
   - '@prisma/client'
   - '@prisma/engines'
+  - '@scarf/scarf'
+  - bcrypt
   - better-sqlite3
   - esbuild
   - prisma
