@@ -2,28 +2,23 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DndContext, DragOverlay, useDraggable, useDroppable } from '@dnd-kit/core';
-import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
-import type { TierCategory, Logo } from '@godtier/shared';
+import type { DragEndEvent, DragStartEvent, DragOverEvent } from '@dnd-kit/core';
+import type { TierCategory, Logo, TierList } from '@godtier/shared';
 import { TIER_CATEGORIES, TIER_DESCRIPTIONS } from '@godtier/shared';
 import { tierListApi, logoApi } from '../services/api';
 
 function DraggableLogo({ logo }: { logo: Logo }) {
-    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
         id: logo.id,
         data: { logo }
     });
-
-    const style = transform ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-    } : undefined;
 
     return (
         <div
             ref={setNodeRef}
             {...listeners}
             {...attributes}
-            style={style}
-            className={`w-20 h-20 bg-white rounded shadow-sm border p-1 cursor-grab active:cursor-grabbing flex items-center justify-center relative group ${isDragging ? 'opacity-50' : ''}`}
+            className={`w-20 h-20 bg-white rounded shadow-sm border p-1 cursor-grab active:cursor-grabbing flex items-center justify-center relative group ${isDragging ? 'opacity-30' : ''}`}
         >
             <img src={logo.imageUrl} alt={logo.name} className="max-w-full max-h-full object-contain" />
             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all rounded" />
@@ -95,7 +90,39 @@ export function TierListPage() {
     const moveLogoMutation = useMutation({
         mutationFn: (data: { logoId: string; categoryId: TierCategory }) =>
             tierListApi.moveLogo(id!, data),
-        onSuccess: () => {
+        onMutate: async (newData) => {
+            await queryClient.cancelQueries({ queryKey: ['tierList', id] });
+            const previousTierList = queryClient.getQueryData<TierList>(['tierList', id]);
+
+            queryClient.setQueryData<TierList>(['tierList', id], (old) => {
+                if (!old) return old;
+
+                const newItems = { ...old.items };
+                let logo: Logo | undefined;
+
+                for (const cat of TIER_CATEGORIES) {
+                    const index = newItems[cat]?.findIndex(l => l.id === newData.logoId);
+                    if (index !== undefined && index !== -1) {
+                        logo = newItems[cat]![index];
+                        newItems[cat] = [...newItems[cat]!];
+                        newItems[cat]!.splice(index, 1);
+                        break;
+                    }
+                }
+
+                if (logo) {
+                    newItems[newData.categoryId] = [...(newItems[newData.categoryId] || []), logo];
+                }
+
+                return { ...old, items: newItems };
+            });
+
+            return { previousTierList };
+        },
+        onError: (_err, _newTodo, context) => {
+            queryClient.setQueryData(['tierList', id], context?.previousTierList);
+        },
+        onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['tierList', id] });
         }
     });
@@ -117,27 +144,57 @@ export function TierListPage() {
         setActiveLogo(event.active.data.current?.logo as Logo);
     };
 
-    const handleDragEnd = (event: DragEndEvent) => {
+    const handleDragOver = (event: DragOverEvent) => {
         const { active, over } = event;
+        if (!over) return;
 
-        setActiveLogo(null);
+        const logoId = active.id as string;
+        const overId = over.id as string;
 
-        if (over && active.id && over.id) {
-            const logoId = active.id as string;
-            // Determine current category
+        // If over a category container (which is just the category string id)
+        const targetCategory = overId as TierCategory;
+        if (!TIER_CATEGORIES.includes(targetCategory)) return;
+
+        // Optimistically update the UI by moving the item in the query cache
+        queryClient.setQueryData<TierList>(['tierList', id], (old) => {
+            if (!old) return old;
+
+            // Find current category
             let currentCategory: TierCategory | undefined;
-            if (tierList && tierList.items) {
-                for (const cat of TIER_CATEGORIES) {
-                    if (tierList.items[cat]?.some(l => l.id === logoId)) {
-                        currentCategory = cat;
-                        break;
-                    }
+            for (const cat of TIER_CATEGORIES) {
+                if (old.items[cat]?.some(l => l.id === logoId)) {
+                    currentCategory = cat;
+                    break;
                 }
             }
 
+            // If already in the target category, do nothing
+            if (!currentCategory || currentCategory === targetCategory) return old;
+
+            const newItems = { ...old.items };
+
+            // Remove from old
+            const logo = newItems[currentCategory]!.find(l => l.id === logoId);
+            if (!logo) return old;
+
+            newItems[currentCategory] = newItems[currentCategory]!.filter(l => l.id !== logoId);
+
+            // Add to new
+            newItems[targetCategory] = [...(newItems[targetCategory] || []), logo];
+
+            return { ...old, items: newItems };
+        });
+    };
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        setActiveLogo(null);
+
+        if (over && active.id) {
+            const logoId = active.id as string;
             const targetCategory = over.id as TierCategory;
 
-            if (currentCategory && currentCategory !== targetCategory) {
+            if (TIER_CATEGORIES.includes(targetCategory)) {
                 moveLogoMutation.mutate({
                     logoId: logoId,
                     categoryId: targetCategory
@@ -152,7 +209,7 @@ export function TierListPage() {
     const totalLogos = Object.values(tierList.items || {}).reduce((acc, curr) => acc + curr.length, 0);
 
     return (
-        <div className="container mx-auto p-4 min-h-screen bg-gray-950 text-white">
+        <div className="min-h-screen p-12 bg-gray-950 text-white">
             <Link to="/" className="text-gray-400 hover:text-white mb-4 inline-block">&larr; Back to Dashboard</Link>
 
             <div className="mb-8 flex justify-between items-start">
@@ -200,7 +257,7 @@ export function TierListPage() {
                 </div>
             </div>
 
-            <DndContext onDragEnd={handleDragEnd} onDragStart={handleDragStart}>
+            <DndContext onDragEnd={handleDragEnd} onDragOver={handleDragOver} onDragStart={handleDragStart}>
                 <div className="select-none">
                     {TIER_CATEGORIES.map(category => (
                         <TierRow
