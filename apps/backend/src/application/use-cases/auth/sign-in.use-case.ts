@@ -12,7 +12,7 @@ export class SignInUseCase {
         @Inject('TokenService') private readonly tokenService: TokenService,
     ) {}
 
-    async execute(dto: SignInDto): Promise<{ accessToken: string }> {
+    async execute(dto: SignInDto): Promise<{ accessToken: string; user: { id: number; email: string; name: string | null } }> {
         const user = await this.userRepository.findByEmail(dto.email);
         if (!user || !user.password) {
             throw new UnauthorizedException('Invalid credentials');
@@ -26,6 +26,13 @@ export class SignInUseCase {
         const payload = { sub: user.id, email: user.email };
         const accessToken = this.tokenService.generateToken(payload);
 
-        return { accessToken };
+        return { 
+            accessToken,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+            }
+        };
     }
 }
