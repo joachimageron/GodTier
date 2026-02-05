@@ -73,6 +73,12 @@ export const tierListApi = {
   moveLogo: async (tierListId: string, data: { logoId: string; categoryId: TierCategory }) => {
     const response = await api.patch<TierList>(`/tier-lists/${tierListId}/logos/move`, data);
     return response.data;
+  },
+  downloadSummary: async () => {
+    const response = await api.get('/tier-lists/summary-pdf', {
+      responseType: 'blob',
+    });
+    return response.data;
   }
 };
 
