@@ -1,6 +1,6 @@
 # GodTier
 
-Application web de création et gestion de tier lists, construite avec NestJS et React.
+Application web de création et gestion de tier lists, construite avec NestJS (Architecture Hexagonale) et React.
 
 ## 🏗️ Architecture
 
@@ -29,15 +29,36 @@ pnpm install
 Créer un fichier `.env` dans `apps/backend/` :
 
 ```env
-# AWS/S3 (LocalStack pour le développement)
+# AWS/S3 (MinIO Local)
 AWS_REGION=us-east-1
-AWS_ENDPOINT=http://localhost:4566
-AWS_ACCESS_KEY_ID=test
-AWS_SECRET_ACCESS_KEY=test
+AWS_ENDPOINT=http://localhost:9000
+AWS_ACCESS_KEY_ID=minioadmin
+AWS_SECRET_ACCESS_KEY=minioadmin
+AWS_BUCKET_NAME=godtier-bucket
 
 # Database
 DATABASE_URL="./dev.db"
 ```
+
+### Services Externes (MinIO)
+
+Pour gérer le stockage des fichiers (PDFs, Logos), nous utilisons un service compatible S3 (MinIO en local).
+
+Lancer MinIO avec Docker :
+
+```bash
+docker run -p 9000:9000 -p 9001:9001 --name minio \
+  -e "MINIO_ROOT_USER=minioadmin" \
+  -e "MINIO_ROOT_PASSWORD=minioadmin" \
+  -v "C:\minio-data:/data" \
+  quay.io/minio/minio server /data --console-address ":9001"
+```
+
+Accéder à la console MinIO : [http://localhost:9001](http://localhost:9001)
+- User: `minioadmin`
+- Pass: `minioadmin`
+
+> **Note**: N'oubliez pas de créer le bucket `godtier-bucket` dans l'interface MinIO avant de tester l'upload.
 
 ## 🎯 Développement
 
@@ -102,7 +123,8 @@ GodTier/
 ### Backend
 - **Framework** : NestJS
 - **Base de données** : SQLite avec TypeORM
-- **Stockage** : AWS S3 / LocalStack
+- **Stockage** : AWS S3 / MinIO
+- **PDF** : PDFKit
 - **Langage** : TypeScript
 
 ### Frontend

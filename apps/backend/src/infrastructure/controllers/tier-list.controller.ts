@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Param, Patch, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, UseGuards, Request, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { CreateTierListDto, AddLogoDto, MoveLogoDto } from '../../application/dtos/tier-list.dto';
@@ -7,6 +8,7 @@ import { GetTierListUseCase } from '../../application/use-cases/tier-list/get-ti
 import { AddLogoUseCase } from '../../application/use-cases/tier-list/add-logo.use-case';
 import { MoveLogoUseCase } from '../../application/use-cases/tier-list/move-logo.use-case';
 import { GetUserTierListsUseCase } from '../../application/use-cases/tier-list/get-user-tier-lists.use-case';
+import { GetTierListsPdfSummaryUseCase } from '../../application/use-cases/tier-list/get-tier-lists-pdf-summary.use-case';
 import { TierList } from '../../domain/tier-list';
 
 @ApiTags('tier-lists')
@@ -20,6 +22,7 @@ export class TierListController {
     private readonly addLogoUseCase: AddLogoUseCase,
     private readonly moveLogoUseCase: MoveLogoUseCase,
     private readonly getUserTierListsUseCase: GetUserTierListsUseCase,
+    private readonly getTierListsPdfSummaryUseCase: GetTierListsPdfSummaryUseCase,
   ) {}
 
   @Post()
@@ -34,6 +37,21 @@ export class TierListController {
   @ApiResponse({ status: 200, description: 'Return the tier lists of the connected user.' })
   async getMyLists(@Request() req): Promise<TierList[]> {
     return this.getUserTierListsUseCase.execute(req.user.userId);
+  }
+
+  @Get('summary-pdf')
+  @ApiOperation({ summary: 'Download PDF summary of user tier lists' })
+  @ApiResponse({ status: 200, description: 'PDF file.' })
+  async downloadSummary(@Request() req, @Res() res: Response): Promise<void> {
+    const buffer = await this.getTierListsPdfSummaryUseCase.execute(req.user.userId);
+    
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'attachment; filename="tier-lists-summary.pdf"',
+      'Content-Length': buffer.length,
+    });
+
+    res.send(buffer);
   }
 
   @Get(':id')
