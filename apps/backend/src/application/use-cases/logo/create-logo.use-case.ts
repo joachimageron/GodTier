@@ -11,13 +11,15 @@ export class CreateLogoUseCase {
         private readonly logoRepository: LogoRepository
     ) {}
 
-    async execute(dto: CreateLogoDto): Promise<Logo> {
-        const logo = new Logo(
+    async execute(dtos: CreateLogoDto[]): Promise<Logo[]> {
+        const logos = dtos.map(dto => new Logo(
             randomUUID(),
             dto.name,
             dto.imageUrl,
             new Date()
-        );
-        return this.logoRepository.create(logo);
+        ));
+        await Promise.all(logos.map(logo => this.logoRepository.create(logo)));
+        
+        return logos;
     }
 }

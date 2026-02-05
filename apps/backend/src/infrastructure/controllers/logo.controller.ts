@@ -1,5 +1,5 @@
-import { Controller, Post, Body, UseGuards, Get, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Post, Body, UseGuards, Get, Param, ParseArrayPipe } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { CreateLogoDto } from '../../application/dtos/logo.dto';
 import { CreateLogoUseCase } from '../../application/use-cases/logo/create-logo.use-case';
@@ -19,10 +19,11 @@ export class LogoController {
     ) {}
 
     @Post()
-    @ApiOperation({ summary: 'Add a new logo to the global collection' })
-    @ApiResponse({ status: 201, description: 'The logo has been successfully added.' })
-    async create(@Body() createLogoDto: CreateLogoDto): Promise<Logo> {
-        return this.createLogoUseCase.execute(createLogoDto);
+    @ApiOperation({ summary: 'Add new logos to the global collection' })
+    @ApiBody({ type: [CreateLogoDto] })
+    @ApiResponse({ status: 201, description: 'The logos have been successfully added.' })
+    async create(@Body(new ParseArrayPipe({ items: CreateLogoDto })) createLogoDtos: CreateLogoDto[]): Promise<Logo[]> {
+        return this.createLogoUseCase.execute(createLogoDtos);
     }
 
     @Get()
